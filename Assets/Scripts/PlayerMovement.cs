@@ -6,6 +6,8 @@ public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 5f;
 
+    public int colectedSouls = 0;
+
     public Rigidbody2D rigidBody;
 
     Vector2 movement;
