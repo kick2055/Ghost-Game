@@ -1,13 +1,24 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-public class GameMenager : MonoBehaviour
+public class GameManager : MonoBehaviour
 {
-    public int passedTime = 0;
     void Start()
     {
         
+    }
+    public void EndTheGame(bool lose)
+    {
+        if (lose)
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        }
+        else
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 2);
+        }
     }
 
     // Update is called once per frame

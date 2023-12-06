@@ -21,5 +21,5 @@ public class Observer : MonoBehaviour
     {
         robotsText.text = ammount + "/9 robots";
     }
-
+    
 }
