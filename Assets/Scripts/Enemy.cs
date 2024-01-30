@@ -6,33 +6,31 @@ public class Enemy : MonoBehaviour
 {
     private Vector2 position;
     public float moveSpeed = 9f;
-    //public Rigidbody2D rigidBody;
-    //[SerializeField]
-    //public Animator animator;
     public Rigidbody2D rigidBody;
-    public Vector3 vec3;
+    public Vector3 direction;
     public int a = 0;
-    
+    public List<Vector3> PathToPlayer = new List<Vector3>();
+    public List<Vector3> patrolPath = new List<Vector3>();
+    public Animator animator;
+
     void Start()
     {
-        vec3.x = 0.005f;
-        vec3.y = 0.005f;
-        vec3.z = 0f;
+        /*direction.x = 0.005f;
+        direction.y = 0.005f;
+        direction.z = 0f;*/
     }
-
     void Update()
-    {
-        
-        transform.position = transform.position + vec3;
+    {  
+        /*transform.position = transform.position + direction;
         a++;
         if(a>=1000)
         {
             a = 0;
-            vec3 *= -1;
+            direction *= -1;
             //vec3.x = vec3.x * -1;
             //vec3.y = vec3.y * -1;
-        }
-       
-        
+        }*/
+
     }
+    
 }

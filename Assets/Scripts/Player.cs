@@ -40,7 +40,7 @@ public class Player : MonoBehaviour
 
 
         if(Input.GetKey(KeyCode.Escape)) SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 2);
-
+        //Debug.Log(CheckWhatChank(transform.position.x, transform.position.y).x + " " + CheckWhatChank(transform.position.x, transform.position.y).y);
     }
 
     private void FixedUpdate()
@@ -57,5 +57,30 @@ public class Player : MonoBehaviour
 
         collectedRobots++;
         soulsChanged?.Invoke(collectedRobots);
+    }
+    public Vector3 CheckWhatChank(float x, float y)
+    {
+        float a = 0, b = 0;
+        if (x < 0 && y < 0)
+        {
+            a = (x / 2.56f) - 1;
+            b = (y / 2.56f) - 1;
+        }
+        else if (x < 0 && y >= 0)
+        {
+            a = (x / 2.56f) - 1;
+            b = y / 2.56f;
+        }
+        else if (x >= 0 && y < 0)
+        {
+            a = x / 2.56f;
+            b = (y / 2.56f) - 1;
+        }
+        else
+        {
+            a = x / 2.56f;
+            b = y / 2.56f;
+        }
+        return new Vector3(a - (a % 1), b - (b % 1), 0);
     }
 }

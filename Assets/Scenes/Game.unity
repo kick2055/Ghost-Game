@@ -426,7 +426,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 163725143}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.26, y: 0.05, z: 0}
+  m_LocalPosition: {x: -1, y: -1.1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1706,6 +1706,66 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!1 &877707730
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 877707732}
+  - component: {fileID: 877707731}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &877707731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 877707730}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f162be95a12fa584a952b6c1f803e09b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioMixer: {fileID: 24100000, guid: d0b30d11bc2f5ec4da2a989ca4499435, type: 2}
+  sounds:
+  - name: SoundRun
+    audioClip: {fileID: 8300000, guid: ff4fb715d9198814b85c171a5ed24764, type: 3}
+    type: 0
+    volume: 0.08
+    pitch: 1
+    looping: 1
+    source: {fileID: 0}
+  - name: 
+    audioClip: {fileID: 0}
+    type: 0
+    volume: 0
+    pitch: 0
+    looping: 0
+    source: {fileID: 0}
+--- !u!4 &877707732
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 877707730}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -7.3342123, y: 35.955463, z: -7.5782948}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &916204801
 GameObject:
   m_ObjectHideFlags: 0
@@ -25050,8 +25110,10 @@ MonoBehaviour:
   robotPrefab: {fileID: 2952235400967787969, guid: 97eb8d7499534c409705860ec0a06bd6, type: 3}
   chestPrefab: {fileID: 1969011324178302711, guid: f3cd9fea88934a6f94a9cfc1112c10b0, type: 3}
   enemyPrefab: {fileID: 8456018872503212722, guid: 44a18746dafae5d41bbb40f6e5a4e74a, type: 3}
+  activePlayer: {fileID: 163725144}
   wallCollider1: {fileID: 2125278230}
   wallCollider2: {fileID: 849401741}
+  playerFound: 0
 --- !u!4 &1812978153
 Transform:
   m_ObjectHideFlags: 0
@@ -38788,6 +38850,7 @@ GameObject:
   - component: {fileID: 1876106865}
   - component: {fileID: 1876106864}
   - component: {fileID: 1876106863}
+  - component: {fileID: 1876106866}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -38845,6 +38908,26 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!95 &1876106866
+Animator:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1876106862}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 21bbd244b5a0d6241b90743a49df4141, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!1 &2015700939
 GameObject:
   m_ObjectHideFlags: 0
