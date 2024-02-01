@@ -20,7 +20,8 @@ public class MapGenerator : MonoBehaviour
     public bool playerFound = false;
     public List<Point> neighboursten = new List<Point>();
     public List<Point> neighboursfourteen = new List<Point>();
-
+    public float nextActionTime = 0.0f;
+    public float period = 4.0f;
 
     public void CreateMap(int right, int up,int left, int down)
     {
@@ -51,9 +52,9 @@ public class MapGenerator : MonoBehaviour
         }
         return list;
     }
-    public Vector3 CheckWhatChank(float x, float y) 
+    public Point CheckWhatChank(float x, float y) 
     {
-        float a = 0, b = 0;
+        float a = x/2.56f, b = y/2.56f;
         if( x<0 && y < 0)
         {
             a = (x / 2.56f) - 1;
@@ -67,18 +68,7 @@ public class MapGenerator : MonoBehaviour
         {
             b = (y / 2.56f) - 1;
         }
-        return new Vector3(a-(a%1),b-(b%1), 0);
-    }
-    public void CreatePatrolPath(Enemy enemy) 
-    {
-        enemy.patrolPath.Clear();
-        int i=0;
-        enemy.patrolPath.Add(CheckWhatChank(enemy.transform.position.x,enemy.transform.position.y));
-        while (i<Random.Range(4,9))
-        {
-            int nextStep = Random.Range(0, 4);
-
-        }
+        return new Point((int)a,(int)b);
     }
     public class Point
     {
@@ -149,7 +139,7 @@ public class MapGenerator : MonoBehaviour
             {
                 if (Map[currentPoint.X + 27 - neigh.X][-currentPoint.Y + 31 + neigh.Y] == 0 || Evaluated.Exists(p => (p.X == currentPoint.X - neigh.X && p.Y == currentPoint.Y - neigh.Y)))
                 {
-                    Debug.Log(Map[currentPoint.X + 27 - neigh.X][-currentPoint.Y + 31 - neigh.Y] + "SCIANA\n");
+                    //Debug.Log(Map[currentPoint.X + 27 - neigh.X][-currentPoint.Y + 31 - neigh.Y] + "SCIANA\n");
                 }
 
                 else if (!(toBeEvaluated.Exists(p => (p.X == currentPoint.X - neigh.X && p.Y == currentPoint.Y - neigh.Y))) || (toBeEvaluated.Find(p => (p.X == currentPoint.X - neigh.X && p.Y == currentPoint.Y - neigh.Y)).G > currentPoint.G + 14))
@@ -170,8 +160,8 @@ public class MapGenerator : MonoBehaviour
                 {
                     if(Map[currentPoint.X + 27 - neigh.X][-currentPoint.Y + 31 - neigh.Y] ==0)
                     {
-                        Debug.Log(" jeden: "+currentPoint.X + " " + (-currentPoint.Y));
-                        Debug.Log("dwa: "+(currentPoint.X + 27 - neigh.X) + " " + (-currentPoint.Y + 31 - neigh.Y));
+                        //Debug.Log(" jeden: "+currentPoint.X + " " + (-currentPoint.Y));
+                        //Debug.Log("dwa: "+(currentPoint.X + 27 - neigh.X) + " " + (-currentPoint.Y + 31 - neigh.Y));
                     }
                 }
 
@@ -191,6 +181,7 @@ public class MapGenerator : MonoBehaviour
     }
     void Start()
     {
+        playerFound = false;
         neighboursfourteen.Add(new Point(1,1));
         neighboursfourteen.Add(new Point(1,-1));
         neighboursfourteen.Add(new Point(-1,1));
@@ -201,7 +192,7 @@ public class MapGenerator : MonoBehaviour
         neighboursten.Add(new Point(0,-1));
         string a = "";
         List<int> positionsOfRobots = RandomIds(23,9);
-        List<int> positionsOfEnemies = RandomIds(5, 2);
+        List<int> positionsOfEnemies = RandomIds(5, 5);
         for (int i=0;i<positionsOfRobots.Count;i++)
         {
             Robot robot = Instantiate(robotPrefab, new Vector3(possibleRobots[positionsOfRobots[i]].x, possibleRobots[positionsOfRobots[i]].y, 0), Quaternion.identity).GetComponent<Robot>();
@@ -228,6 +219,7 @@ public class MapGenerator : MonoBehaviour
             }
             a += "\n";
         }
+        
 
         Point abc = new Point(0, 0);
         Point bcd = new Point(-26, 30);
@@ -236,7 +228,7 @@ public class MapGenerator : MonoBehaviour
         string message = "";
         List<Vector3> trasa = new List<Vector3>();
 
-        while(asp.Parent != null)
+        /*while(asp.Parent != null)
         {
             message = "";
 
@@ -255,11 +247,29 @@ public class MapGenerator : MonoBehaviour
         foreach(Vector3 v in listOfEnemies[0].PathToPlayer)
         {
             Debug.Log(v.x + " " + v.y);
-        }
+        }*/
+        
     }
     // Update is called once per frame
     void Update()
     {
-        
+        if(Time.time > nextActionTime)
+        {
+            nextActionTime += period;
+            foreach (Enemy enemy in listOfEnemies)
+            {
+                Point start = CheckWhatChank(enemy.transform.position.x, enemy.transform.position.y);
+                Point end = CheckWhatChank(activePlayer.transform.position.x, activePlayer.transform.position.y);
+                AStarPoint road = AStarAlgoritm(start, end);
+                List<Vector3> path = new List<Vector3>();
+                while (road.Parent != null)
+                {
+                    path.Add(new Vector3(road.X, road.Y, 0));
+                    Debug.Log(road.X + " " + road.Y);
+                    road = road.Parent;
+                }
+                enemy.PathToPlayer = path;
+            }
+        }
     }
 }
