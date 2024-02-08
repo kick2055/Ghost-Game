@@ -25,7 +25,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8456018871646698281}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.03, y: -0.067, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -206,10 +206,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b091ac186dfb9f64f9421a6db4fc8cb0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 9
+  moveSpeed: 2
   rigidBody: {fileID: -6644154348747897385}
-  vec3: {x: 0, y: 0, z: 0}
+  direction: {x: 0, y: 0, z: 0}
   a: 0
+  PathToPlayer: []
+  patrolPath: []
+  animator: {fileID: 0}
+  nextMove: {x: 0, y: 0, z: 0}
+  startTime: 0
+  journeyLength: 0
+  speed: 0
 --- !u!61 &-8318017178084173461
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -270,6 +277,6 @@ CircleCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.0000001788139, y: -0.8857716}
+  m_Offset: {x: 0, y: -0.8}
   serializedVersion: 2
-  m_Radius: 0.4866143
+  m_Radius: 0.4
