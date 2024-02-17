@@ -217,6 +217,10 @@ MonoBehaviour:
   startTime: 0
   journeyLength: 0
   speed: 0
+  patrolCounter: 0
+  layerMask: 4
+  nextActionTime: 0
+  forgetPeriod: 15
 --- !u!61 &-8318017178084173461
 BoxCollider2D:
   m_ObjectHideFlags: 0

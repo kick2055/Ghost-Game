@@ -20,7 +20,7 @@ public class Robot : MonoBehaviour
         {
             
             collected = true;
-            player.ChangeSpeed(1);
+            player.ChangeSpeed(0.33f);
             player.ChangeSouls();
             Destroy(gameObject);
         }

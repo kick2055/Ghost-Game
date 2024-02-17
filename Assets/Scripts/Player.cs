@@ -50,7 +50,7 @@ public class Player : MonoBehaviour
     }
     public void ChangeSpeed(float speed)
     {
-        moveSpeed += speed;
+        moveSpeed -= speed;
     }
     public void ChangeSouls()
     {

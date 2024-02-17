@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class Observer : MonoBehaviour
 {
@@ -20,6 +21,10 @@ public class Observer : MonoBehaviour
     private void UpdateRobots(int ammount)
     {
         robotsText.text = ammount + "/9 robots";
+        if (ammount == MapGenerator.instance.numberOfRobots)
+        {
+            SceneManager.LoadScene(3);
+        }
     }
     
 }

@@ -16,14 +16,19 @@ public class MapGenerator : MonoBehaviour
     public Player activePlayer;
     public Tilemap wallCollider1;
     public Tilemap wallCollider2;
+    public Tilemap waterCollider;
     public List<List<int>> Map = new List<List<int>>();
     public bool playerFound = false;
     public List<Point> neighboursten = new List<Point>();
     public List<Point> neighboursfourteen = new List<Point>();
     public float nextActionTime = 0.0f;
     public float period = 10f;
-    public bool playerJustLost = false;
-    public bool patrolDone = false;
+    public bool EnemySeesPlayer;
+    public int numberOfRobots = 9;
+    public int numberOfEnemy = 1;
+    private float timer = 0.0f;
+    private float waitTime = 4.0f;
+    public int[,] mapOfTakenPoints;
 
     [HideInInspector]
     public static MapGenerator instance;
@@ -48,7 +53,7 @@ public class MapGenerator : MonoBehaviour
             Map.Add(new List<int>());
             for (int j = up-down-1; j >= -1; j--)
             {
-                if (wallCollider1.HasTile(new Vector3Int(i+left, j+down, 0)) || wallCollider2.HasTile(new Vector3Int(i+left, j+down, 0)))
+                if (wallCollider1.HasTile(new Vector3Int(i+left, j+down, 0)) || wallCollider2.HasTile(new Vector3Int(i+left, j+down, 0)) || waterCollider.HasTile(new Vector3Int(i+left,j+down,0)))
                 {
                     Map[i].Add(0);
                 }
@@ -58,6 +63,10 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
+    }
+    public void ResetMapOfTakenPoints()
+    {
+        mapOfTakenPoints = new int[Map.Count,Map[0].Count];
     }
     List<int> RandomIds(int max, int ammount)
     {
@@ -88,6 +97,92 @@ public class MapGenerator : MonoBehaviour
         }
         return new Point((int)a,(int)b);
     }
+    public Point CheckWhatChankWithWallCorrection(float x, float y)
+    {
+        float a = x / 2.56f, b = y / 2.56f;
+        if (x < 0 && y < 0)
+        {
+            a = (x / 2.56f) - 1;
+            b = (y / 2.56f) - 1;
+        }
+        else if (x < 0 && y >= 0)
+        {
+            a = (x / 2.56f) - 1;
+        }
+        else if (x >= 0 && y < 0)
+        {
+            b = (y / 2.56f) - 1;
+        }
+        Point point = new Point((int)a, (int)b);
+
+        if (Map[point.X + 27][-point.Y + 31] == 1)
+        {
+            return point;
+        }
+        else
+        {
+            float xPlane = x % 2.56f;
+            float yPlane = y % 2.56f;
+            if(xPlane >= 1.28f)
+            {
+                if (Map[point.X + 27 + 1][-point.Y + 31] == 1)
+                {
+                    point.X++;
+                    return point;
+                }
+            }
+            else if (xPlane <= 1.28f)
+            {
+                if (Map[point.X + 27 - 1][-point.Y + 31] == 1)
+                {
+                    point.X--;
+                    return point;
+                }
+            }
+            if (yPlane >= 1.28f)
+            {
+                if (Map[point.X + 27][-point.Y + 31 + 1] == 1)
+                {
+                    point.Y++;
+                    return point;
+                }
+            }
+            else if (yPlane <= 1.28f)
+            {
+                if (Map[point.X + 27][-point.Y + 31 - 1] == 1)
+                {
+                    point.Y--;
+                    return point;
+                }
+            }
+            if(xPlane >= 1.28f && yPlane >= 1.28f)
+            {
+                point.Y++;
+                point.X++;
+                return point;
+            }
+            else if (xPlane >= 1.28f && yPlane <= 1.28f)
+            {
+                point.Y--;
+                point.X++;
+                return point;
+            }
+            else if (xPlane <= 1.28f && yPlane <= 1.28f)
+            {
+                point.Y--;
+                point.X--;
+                return point;
+            }
+            else if (xPlane <= 1.28f && yPlane >= 1.28f)
+            {
+                point.Y++;
+                point.X--;
+                return point;
+            }
+            return point;
+        }
+        
+    }
     public class Point
     {
         public int X;
@@ -110,7 +205,8 @@ public class MapGenerator : MonoBehaviour
         public int Y;
         public int G;
         public int H;
-        public int F => G + H;
+        public int J;
+        public int F => G + H + J;
         public AStarPoint Parent;
         public AStarPoint(int x, int y)
         {
@@ -118,6 +214,7 @@ public class MapGenerator : MonoBehaviour
             Y = y;
             G = 0;
             H = 0;
+            J = 0;
             Parent = null;
         }
     }
@@ -128,20 +225,26 @@ public class MapGenerator : MonoBehaviour
         List<AStarPoint> toBeEvaluated = new List<AStarPoint>();
         List<AStarPoint> Evaluated = new List<AStarPoint>();
         toBeEvaluated.Add(new AStarPoint(Start.X,Start.Y));
-        while(true)//currentPoint.X != End.X || currentPoint.Y != End.Y
+        while(true)
         {
-            currentPoint = toBeEvaluated.OrderBy(p=>p.F).FirstOrDefault();
-            toBeEvaluated.Remove(currentPoint);
-            Evaluated.Add(currentPoint);
-            if(currentPoint.X == End.X && currentPoint.Y == End.Y)
+            if(toBeEvaluated.Count == 0)
             {
                 return currentPoint;
             }
-            foreach(Point neigh in neighboursfourteen)
+            currentPoint = toBeEvaluated.OrderBy(p=>p.F).FirstOrDefault();
+            toBeEvaluated.Remove(currentPoint);
+            Evaluated.Add(currentPoint);
+
+            if (currentPoint.X == End.X && currentPoint.Y == End.Y)
+            {
+                return currentPoint;
+            }
+
+            foreach (Point neigh in neighboursfourteen)
             {
                 if (Map[currentPoint.X + 27 - neigh.X][-currentPoint.Y + 31 + neigh.Y] == 0 || Evaluated.Exists(p => (p.X == currentPoint.X - neigh.X && p.Y == currentPoint.Y - neigh.Y)))
                 {
-                    //Debug.Log(Map[currentPoint.X + 27 - neigh.X][-currentPoint.Y + 31 - neigh.Y] + "SCIANA\n");
+
                 }
 
                 else if (!(toBeEvaluated.Exists(p => (p.X == currentPoint.X - neigh.X && p.Y == currentPoint.Y - neigh.Y))) || (toBeEvaluated.Find(p => (p.X == currentPoint.X - neigh.X && p.Y == currentPoint.Y - neigh.Y)).G > currentPoint.G + 14))
@@ -175,11 +278,87 @@ public class MapGenerator : MonoBehaviour
                     }
                 }
             }
+            
+        }
+    }
+    public AStarPoint AStarAlgoritmUpgraded(Point Start, Point End)
+    {
+
+        AStarPoint currentPoint = null;
+        List<AStarPoint> toBeEvaluated = new List<AStarPoint>();
+        List<AStarPoint> Evaluated = new List<AStarPoint>();
+        toBeEvaluated.Add(new AStarPoint(Start.X, Start.Y));
+        while (true)
+        {
+            if (toBeEvaluated.Count == 0)
+            {
+                AStarPoint fastPoint = currentPoint;
+                while(fastPoint.Parent != null)
+                {
+                    mapOfTakenPoints[fastPoint.X + 27, -fastPoint.Y + 31] += 600;
+                    fastPoint = fastPoint.Parent;
+                }
+                return currentPoint;
+            }
+            currentPoint = toBeEvaluated.OrderBy(p => p.F).FirstOrDefault();
+            toBeEvaluated.Remove(currentPoint);
+            Evaluated.Add(currentPoint);
+
+            if (currentPoint.X == End.X && currentPoint.Y == End.Y)
+            {
+                AStarPoint fastPoint = currentPoint;
+                while (fastPoint.Parent != null)
+                {
+                    mapOfTakenPoints[fastPoint.X + 27, -fastPoint.Y + 31] += 600;
+                    fastPoint = fastPoint.Parent;
+                }
+                return currentPoint;
+            }
+
+            foreach (Point neigh in neighboursfourteen)
+            {
+                if (Map[currentPoint.X + 27 - neigh.X][-currentPoint.Y + 31 + neigh.Y] == 0 || Evaluated.Exists(p => (p.X == currentPoint.X - neigh.X && p.Y == currentPoint.Y - neigh.Y)))
+                {
+
+                }
+
+                else if (!(toBeEvaluated.Exists(p => (p.X == currentPoint.X - neigh.X && p.Y == currentPoint.Y - neigh.Y))) || (toBeEvaluated.Find(p => (p.X == currentPoint.X - neigh.X && p.Y == currentPoint.Y - neigh.Y)).G > currentPoint.G + 14))
+                {
+                    AStarPoint newPoint = new AStarPoint(currentPoint.X - neigh.X, currentPoint.Y - neigh.Y);
+                    newPoint.G = currentPoint.G + 14;
+                    newPoint.H = CalculateDistance(newPoint.X, newPoint.Y, End.X, End.Y);
+                    newPoint.J = mapOfTakenPoints[newPoint.X + 27, - newPoint.Y + 31];
+                    newPoint.Parent = currentPoint;
+                    if (!(toBeEvaluated.Exists(p => (p.X == currentPoint.X - neigh.X && p.Y == currentPoint.Y - neigh.Y))))
+                    {
+                        toBeEvaluated.Add(newPoint);
+                    }
+                }
+            }
+            foreach (Point neigh in neighboursten)
+            {
+                if (Map[currentPoint.X + 27 - neigh.X][-currentPoint.Y + 31 + neigh.Y] == 0 || Evaluated.Exists(p => (p.X == currentPoint.X - neigh.X && p.Y == currentPoint.Y - neigh.Y)))
+                {
+
+                }
+
+                else if (!(toBeEvaluated.Exists(p => (p.X == currentPoint.X - neigh.X && p.Y == currentPoint.Y - neigh.Y))) || (toBeEvaluated.Find(p => (p.X == currentPoint.X - neigh.X && p.Y == currentPoint.Y - neigh.Y)).G > currentPoint.G + 10))
+                {
+                    AStarPoint newPoint = new AStarPoint(currentPoint.X - neigh.X, currentPoint.Y - neigh.Y);
+                    newPoint.G = currentPoint.G + 10;
+                    newPoint.H = CalculateDistance(newPoint.X, newPoint.Y, End.X, End.Y);
+                    newPoint.Parent = currentPoint;
+                    if (!(toBeEvaluated.Exists(p => (p.X == currentPoint.X - neigh.X && p.Y == currentPoint.Y - neigh.Y))))
+                    {
+                        toBeEvaluated.Add(newPoint);
+                    }
+                }
+            }
+
         }
     }
     public Point CreatePatrol(float x, float y)
     {
-        Debug.Log("siema");
         Point start = CheckWhatChank(x, y);
         Point end = new Point(0,0);
         bool correctEnd = false;
@@ -220,8 +399,6 @@ public class MapGenerator : MonoBehaviour
             {
                 if (Map[end.X + 27][-end.Y + 31] == 1)
                 {
-                    Debug.Log("start: " + start.X * 2.56f + 1.28f + ", " + start.Y * 2.56f + 1.28f);
-                    Debug.Log("end: " + end.X * 2.56f + 1.28f + ", " + end.Y * 2.56f + 1.28f);
                     correctEnd = true;
                 }
             }
@@ -232,6 +409,7 @@ public class MapGenerator : MonoBehaviour
     void Start()
     {
         playerFound = false;
+        EnemySeesPlayer = false;
         neighboursfourteen.Add(new Point(1, 1));
         neighboursfourteen.Add(new Point(1, -1));
         neighboursfourteen.Add(new Point(-1, 1));
@@ -241,8 +419,8 @@ public class MapGenerator : MonoBehaviour
         neighboursten.Add(new Point(0, 1));
         neighboursten.Add(new Point(0, -1));
         string a = "";
-        List<int> positionsOfRobots = RandomIds(23, 9);
-        List<int> positionsOfEnemies = RandomIds(5, 1);
+        List<int> positionsOfRobots = RandomIds(23, numberOfRobots);
+        List<int> positionsOfEnemies = RandomIds(5, numberOfEnemy);
         for (int i = 0; i < positionsOfRobots.Count; i++)
         {
             Robot robot = Instantiate(robotPrefab, new Vector3(possibleRobots[positionsOfRobots[i]].x, possibleRobots[positionsOfRobots[i]].y, 0), Quaternion.identity).GetComponent<Robot>();
@@ -254,10 +432,12 @@ public class MapGenerator : MonoBehaviour
             listOfEnemies.Add(enemy);
         }
         CreateMap(21, 32, -27, -3);
+        ResetMapOfTakenPoints();
         for (int i = 0; i < Map[0].Count - 1; i++)
         {
             for (int j = 0; j < Map.Count; j++)
             {
+                Debug.Log("git " + mapOfTakenPoints[j, i]);
                 if (Map[j][i] == 1)
                 {
                     a += "+";
@@ -272,50 +452,76 @@ public class MapGenerator : MonoBehaviour
 
         foreach (Enemy enemy in listOfEnemies)
         {
-            Debug.Log("START OD: " + enemy.transform.position.x + "  " + enemy.transform.position.y);
-            int i;
             Point end = CreatePatrol(enemy.transform.position.x,enemy.transform.position.y);
             Point start = CheckWhatChank(enemy.transform.position.x, enemy.transform.position.y);
             AStarPoint road = AStarAlgoritm(start, end);
             List<Vector3> path = new List<Vector3>();
-            i = 0;
             while (road.Parent != null)
             {
 
                 path.Add(new Vector3(road.X, road.Y, 0));
-                Debug.Log(i + ". krok: " + (road.X * 2.56f + 1.28f) + "  " + (road.Y * 2.56f + 1.28f));
+
                 road = road.Parent;
-                i++;
             }
+            path.Reverse();
             enemy.patrolPath = path;
         }
     }
     void Update()
     {
-        if(Time.time > nextActionTime)
+        foreach(Enemy enemy in listOfEnemies)
         {
-            nextActionTime += period;
-            if (patrolDone == false)
+            if(enemy.canSeePlayer == true)
             {
-
+                EnemySeesPlayer = true;
             }
-            
-            if(true)
+        }
+        if(EnemySeesPlayer==true)
+        {
+            playerFound = true;
+            //moze timer zobaczymy
+            ResetMapOfTakenPoints();
+            foreach (Enemy enemy in listOfEnemies)
             {
-                foreach (Enemy enemy in listOfEnemies)
+                Point start = CheckWhatChankWithWallCorrection(enemy.transform.position.x, enemy.transform.position.y);
+                Point end = CheckWhatChankWithWallCorrection(activePlayer.transform.position.x, activePlayer.transform.position.y);
+                Debug.Log("Start: " + start.X + " " + start.Y);
+                Debug.Log("End: " + end.X + " " + end.Y);
+                AStarPoint road = AStarAlgoritmUpgraded(start, end);
+                List<Vector3> path = new List<Vector3>();
+                while (road.Parent != null)
                 {
-                    //enemy.patrolPath.Clear();
-                    Point start = CheckWhatChank(enemy.transform.position.x, enemy.transform.position.y);
-                    Point end = CheckWhatChank(activePlayer.transform.position.x, activePlayer.transform.position.y);
-                    AStarPoint road = AStarAlgoritm(start, end);
-                    List<Vector3> path = new List<Vector3>();
-                    while (road.Parent != null)
+                    path.Add(new Vector3(road.X, road.Y, 0));
+                    road = road.Parent;
+                }
+                enemy.PathToPlayer = path;
+            }
+            EnemySeesPlayer = false;
+            timer = 0.0f;
+        }
+        else
+        {
+            if(playerFound == true)
+            {
+                timer += Time.deltaTime;
+                if(timer > waitTime)
+                {
+                    playerFound = false;
+                    foreach(Enemy enemy in listOfEnemies)
                     {
-                        Debug.Log("DO GRACZA: " + (road.X * 2.56f + 1.28f) + "  " + (road.Y * 2.56f + 1.28f));
-                        path.Add(new Vector3(road.X, road.Y, 0));
-                        road = road.Parent;
+                        enemy.returningToPatrol = true;
+                        Point start = CheckWhatChankWithWallCorrection(enemy.transform.position.x, enemy.transform.position.y);
+                        Point end = new Point((int)enemy.nextMovePatrol.x, (int)enemy.nextMovePatrol.y);
+                        AStarPoint road = AStarAlgoritm(start, end);
+                        List<Vector3> path = new List<Vector3>();
+                        while (road.Parent != null)
+                        {
+                            path.Add(new Vector3(road.X, road.Y, 0));
+                            road = road.Parent;
+                        }
+                        enemy.patrolPathReturn = path;
                     }
-                    enemy.PathToPlayer = path;
+                    timer = 0.0f;
                 }
             }
         }
