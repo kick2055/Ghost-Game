@@ -212,15 +212,17 @@ MonoBehaviour:
   a: 0
   PathToPlayer: []
   patrolPath: []
-  animator: {fileID: 0}
+  patrolPathReturn: []
+  animator: {fileID: 8456018872503212723}
   nextMove: {x: 0, y: 0, z: 0}
+  nextMovePatrol: {x: 0, y: 0, z: 0}
   startTime: 0
   journeyLength: 0
   speed: 0
   patrolCounter: 0
   layerMask: 4
-  nextActionTime: 0
-  forgetPeriod: 15
+  canSeePlayer: 0
+  returningToPatrol: 0
 --- !u!61 &-8318017178084173461
 BoxCollider2D:
   m_ObjectHideFlags: 0

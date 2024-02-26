@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Linq;
+using UnityEngine.SceneManagement;
 
 public class MapGenerator : MonoBehaviour
 {
@@ -10,8 +11,8 @@ public class MapGenerator : MonoBehaviour
     private Vector2[] possibleRobots;
     [SerializeField]
     private Vector2[] possibleEnemies;
-    private List<Robot> listOfRobots = new List<Robot>();
-    private List<Enemy> listOfEnemies = new List<Enemy>();
+    public List<Robot> listOfRobots = new List<Robot>();
+    public List<Enemy> listOfEnemies = new List<Enemy>();
     public GameObject robotPrefab, chestPrefab, enemyPrefab;
     public Player activePlayer;
     public Tilemap wallCollider1;
@@ -25,13 +26,17 @@ public class MapGenerator : MonoBehaviour
     public float period = 10f;
     public bool EnemySeesPlayer;
     public int numberOfRobots = 9;
-    public int numberOfEnemy = 1;
-    private float timer = 0.0f;
-    private float waitTime = 4.0f;
+    public int numberOfEnemy = 5;
+    private float timerPlayerLost = 0.0f;
+    private float timerPathToPlayer = 10.0f;
+    private float waitTimePlayerLost = 4.0f;
+    private float waitTimeToPlayer = 1f;
     public int[,] mapOfTakenPoints;
-
     [HideInInspector]
     public static MapGenerator instance;
+    public bool gameIsPaused = false;
+    public static event System.Action<string> playerVisibilityChanged;
+    public GameObject parentOfPause;
 
     void Awake()
     {
@@ -44,8 +49,8 @@ public class MapGenerator : MonoBehaviour
             Destroy(this);
             return;
         }
+        numberOfRobots = 1;
     }
-
     public void CreateMap(int right, int up,int left, int down)
     {
         for (int i = 0; i < (right-left); i++)
@@ -68,7 +73,7 @@ public class MapGenerator : MonoBehaviour
     {
         mapOfTakenPoints = new int[Map.Count,Map[0].Count];
     }
-    List<int> RandomIds(int max, int ammount)
+    public List<int> RandomIds(int max, int ammount)
     {
         List<int> list = new List<int>();
         int newId;
@@ -125,11 +130,15 @@ public class MapGenerator : MonoBehaviour
             float yPlane = y % 2.56f;
             if(xPlane >= 1.28f)
             {
-                if (Map[point.X + 27 + 1][-point.Y + 31] == 1)
+                if(point.X +27+1 < Map.Count)
                 {
-                    point.X++;
-                    return point;
+                    if (Map[point.X + 27 + 1][-point.Y + 31] == 1)
+                    {
+                        point.X++;
+                        return point;
+                    }
                 }
+                
             }
             else if (xPlane <= 1.28f)
             {
@@ -181,7 +190,6 @@ public class MapGenerator : MonoBehaviour
             }
             return point;
         }
-        
     }
     public class Point
     {
@@ -192,7 +200,6 @@ public class MapGenerator : MonoBehaviour
             X = x;
             Y = y;
         }
-
     }
     public int CalculateDistance(int StartX, int StartY, int EndX, int EndY)
     {
@@ -406,8 +413,33 @@ public class MapGenerator : MonoBehaviour
         }
         return end;
     }
+
+    public void Resume()
+    {
+        parentOfPause.SetActive(false);
+        Time.timeScale = 1f;
+        gameIsPaused = false;
+        AudioManager.instance.PlaySound("SoundClick");
+    }
+
+    public void Pause()
+    {
+        parentOfPause.SetActive(true);
+        Time.timeScale = 0f;
+        gameIsPaused = true;
+    }
+    
+    public void LoseGame()
+    {
+        Time.timeScale = 1f;
+        GlobalData.numberOfRobots = activePlayer.collectedRobots;
+        GlobalData.time = Timer.instance.getTimer();
+        SceneManager.LoadScene(2);
+    }
     void Start()
     {
+        AudioManager.instance.PlaySound("SoundGame");
+        playerVisibilityChanged?.Invoke("green");
         playerFound = false;
         EnemySeesPlayer = false;
         neighboursfourteen.Add(new Point(1, 1));
@@ -420,7 +452,7 @@ public class MapGenerator : MonoBehaviour
         neighboursten.Add(new Point(0, -1));
         string a = "";
         List<int> positionsOfRobots = RandomIds(23, numberOfRobots);
-        List<int> positionsOfEnemies = RandomIds(5, numberOfEnemy);
+        List<int> positionsOfEnemies = RandomIds(9, numberOfEnemy);
         for (int i = 0; i < positionsOfRobots.Count; i++)
         {
             Robot robot = Instantiate(robotPrefab, new Vector3(possibleRobots[positionsOfRobots[i]].x, possibleRobots[positionsOfRobots[i]].y, 0), Quaternion.identity).GetComponent<Robot>();
@@ -437,7 +469,6 @@ public class MapGenerator : MonoBehaviour
         {
             for (int j = 0; j < Map.Count; j++)
             {
-                Debug.Log("git " + mapOfTakenPoints[j, i]);
                 if (Map[j][i] == 1)
                 {
                     a += "+";
@@ -469,6 +500,18 @@ public class MapGenerator : MonoBehaviour
     }
     void Update()
     {
+        if(Input.GetKeyDown(KeyCode.Escape))
+        {
+            if(gameIsPaused)
+            {
+                Resume();
+            }
+            else
+            {           
+                Pause();
+            }
+        }
+
         foreach(Enemy enemy in listOfEnemies)
         {
             if(enemy.canSeePlayer == true)
@@ -478,33 +521,38 @@ public class MapGenerator : MonoBehaviour
         }
         if(EnemySeesPlayer==true)
         {
-            playerFound = true;
-            //moze timer zobaczymy
-            ResetMapOfTakenPoints();
-            foreach (Enemy enemy in listOfEnemies)
+            timerPathToPlayer += Time.deltaTime;
+            if(timerPathToPlayer>waitTimeToPlayer)
             {
-                Point start = CheckWhatChankWithWallCorrection(enemy.transform.position.x, enemy.transform.position.y);
-                Point end = CheckWhatChankWithWallCorrection(activePlayer.transform.position.x, activePlayer.transform.position.y);
-                Debug.Log("Start: " + start.X + " " + start.Y);
-                Debug.Log("End: " + end.X + " " + end.Y);
-                AStarPoint road = AStarAlgoritmUpgraded(start, end);
-                List<Vector3> path = new List<Vector3>();
-                while (road.Parent != null)
+                playerVisibilityChanged?.Invoke("red");
+                playerFound = true;
+                ResetMapOfTakenPoints();
+
+                foreach (Enemy enemy in listOfEnemies)
                 {
-                    path.Add(new Vector3(road.X, road.Y, 0));
-                    road = road.Parent;
+                    Point start = CheckWhatChankWithWallCorrection(enemy.transform.position.x, enemy.transform.position.y);
+                    Point end = CheckWhatChankWithWallCorrection(activePlayer.transform.position.x, activePlayer.transform.position.y);
+                    AStarPoint road = AStarAlgoritmUpgraded(start, end);
+                    List<Vector3> path = new List<Vector3>();
+                    while (road.Parent != null)
+                    {
+                        path.Add(new Vector3(road.X, road.Y, 0));
+                        road = road.Parent;
+                    }
+                    enemy.PathToPlayer = path;
                 }
-                enemy.PathToPlayer = path;
+                EnemySeesPlayer = false;
+                timerPlayerLost = 0.0f;
+                timerPathToPlayer = 0.0f;
             }
-            EnemySeesPlayer = false;
-            timer = 0.0f;
         }
         else
         {
             if(playerFound == true)
             {
-                timer += Time.deltaTime;
-                if(timer > waitTime)
+                playerVisibilityChanged?.Invoke("yellow");
+                timerPlayerLost += Time.deltaTime;
+                if(timerPlayerLost > waitTimePlayerLost)
                 {
                     playerFound = false;
                     foreach(Enemy enemy in listOfEnemies)
@@ -521,7 +569,8 @@ public class MapGenerator : MonoBehaviour
                         }
                         enemy.patrolPathReturn = path;
                     }
-                    timer = 0.0f;
+                    timerPlayerLost = 0.0f;
+                    playerVisibilityChanged?.Invoke("green");
                 }
             }
         }

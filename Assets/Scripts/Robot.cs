@@ -6,10 +6,6 @@ public class Robot : MonoBehaviour
 {
     private Vector2 position;
     private bool collected = false;
-    private void Start()
-    {
-        AudioManager.instance.PlaySound("SoundRun");
-    }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -20,8 +16,8 @@ public class Robot : MonoBehaviour
         {
             
             collected = true;
-            player.ChangeSpeed(0.33f);
-            player.ChangeSouls();
+            player.ChangeSpeed(0.05f);
+            player.ChangeRobots();
             Destroy(gameObject);
         }
     }

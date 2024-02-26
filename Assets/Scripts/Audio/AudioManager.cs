@@ -100,44 +100,6 @@ public class AudioManager : MonoBehaviour
         Destroy(soundObject, audioSource.clip.length);
     }
 
-    public void PlayRandomSound(string name)
-    {
-        List<Sound> soundList = sounds.FindAll(s => s.name.Contains(name));
-        if (soundList == null)
-        {
-            Debug.LogWarning("Sound containing name " + name + " not found!");
-            return;
-        }
-        soundList[Random.Range(0, soundList.Count)].source.Play();
-    }
-
-    public void PlayRandomSound(string name, Vector3 position)
-    {
-        List<Sound> soundList = sounds.FindAll(s => s.name.Contains(name));
-        if (soundList == null)
-        {
-            Debug.LogWarning("Sound containing name " + name + " not found!");
-            return;
-        }
-        Sound sound = soundList[Random.Range(0, soundList.Count)];
-        
-        GameObject soundObject = new GameObject("Sound");
-        soundObject.transform.position = position;
-        AudioSource audioSource = soundObject.AddComponent<AudioSource>();
-        audioSource.clip = sound.audioClip;
-        audioSource.pitch = sound.pitch;
-        audioSource.volume = sound.volume;
-        audioSource.loop = sound.looping;
-        audioSource.maxDistance = 1200f;
-        audioSource.spatialBlend = 1f;
-        audioSource.rolloffMode = AudioRolloffMode.Logarithmic;
-        audioSource.dopplerLevel = 0f;
-        audioSource.outputAudioMixerGroup = audioMixer.FindMatchingGroups("Master")[(int)sound.type + 1];
-        audioSource.Play();
-
-        Destroy(soundObject, audioSource.clip.length);
-    }
-
     public void StopSound(string name)
     {
         Sound sound = sounds.Find(s => s.name == name);

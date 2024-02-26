@@ -23,9 +23,11 @@ public class Enemy : MonoBehaviour
     private bool patrolForward = true;
     public int patrolCounter = -1;
     public int layerMask;
+    public int layerMaskWater;
     public RaycastHit2D hit;
     public bool canSeePlayer = false;
     public bool returningToPatrol = false;
+
 
     public Point CheckWhatChank(float x, float y)
     {
@@ -67,6 +69,13 @@ public class Enemy : MonoBehaviour
             Y = y;
         }
     }
+    public void AnimatorInformation(Vector3 start,Vector3 end)
+    {
+        animator.SetFloat("Horizontal", end.x-start.x);
+        animator.SetFloat("Vertical", end.y - start.y);
+    }
+
+
 
     public double CalculateDistance(float StartX, float StartY, float EndX, float EndY)
     {
@@ -81,17 +90,22 @@ public class Enemy : MonoBehaviour
         direction.y = 0.005f;
         direction.z = 0f;*/
         layerMask = 72;
+        layerMaskWater = 80;
 
     }
     void Update()
     {
         if(CalculateDistance(transform.position.x,transform.position.y, MapGenerator.instance.activePlayer.transform.position.x, MapGenerator.instance.activePlayer.transform.position.y) <= 16)
         {
+            GlobalData.numberOfRobots = MapGenerator.instance.activePlayer.collectedRobots;
+            GlobalData.time = Timer.instance.getTimer();
             SceneManager.LoadScene(2);
         }
         Vector2 rayDirection = MapGenerator.instance.activePlayer.transform.position - transform.position;
         rayDirection.y -= 0.8f;
         RaycastHit2D hit = Physics2D.Raycast(transform.position, rayDirection, 9999, layerMask);
+        RaycastHit2D hitWater = Physics2D.Raycast(transform.position, rayDirection, 9999, layerMaskWater);
+        Vector2 raycastDirectionWater = hitWater.point - new Vector2(transform.position.x, transform.position.y);
         Vector2 raycastDirection = hit.point - new Vector2(transform.position.x,transform.position.y);
         Debug.DrawRay(transform.position, raycastDirection, Color.red);
         if (hit.collider != null)
@@ -145,6 +159,7 @@ public class Enemy : MonoBehaviour
                     }
                 }
                 transform.position = Vector3.MoveTowards(transform.position, new Vector3(nextMovePatrol.x * 2.56f + 1.28f, nextMovePatrol.y * 2.56f + 1.28f, 0), moveSpeed * Time.deltaTime * 2);
+                AnimatorInformation(transform.position, new Vector3(nextMovePatrol.x * 2.56f + 1.28f, nextMovePatrol.y * 2.56f + 1.28f, 0));
             }
             else
             {
@@ -158,6 +173,7 @@ public class Enemy : MonoBehaviour
                     }
                 }
                 transform.position = Vector3.MoveTowards(transform.position, new Vector3(nextMove.x * 2.56f + 1.28f, nextMove.y * 2.56f + 1.28f, 0), moveSpeed * Time.deltaTime * 2);
+                AnimatorInformation(transform.position, new Vector3(nextMove.x * 2.56f + 1.28f, nextMove.y * 2.56f + 1.28f, 0));
                 if (CheckIfCloseToMiddleOfChank(nextMovePatrol))
                 {
                     returningToPatrol = false;
@@ -167,9 +183,11 @@ public class Enemy : MonoBehaviour
         }
         else
         {
-            if(hit.collider.gameObject.CompareTag("Player") && CalculateDistance(transform.position.x, transform.position.y, MapGenerator.instance.activePlayer.transform.position.x, MapGenerator.instance.activePlayer.transform.position.y) <= 64)
+            
+            if (hitWater.collider.gameObject.CompareTag("Player") && hit.collider.gameObject.CompareTag("Player") && CalculateDistance(transform.position.x, transform.position.y, MapGenerator.instance.activePlayer.transform.position.x, MapGenerator.instance.activePlayer.transform.position.y) <= 100)
             {
                 transform.position = Vector3.MoveTowards(transform.position, MapGenerator.instance.activePlayer.transform.position, moveSpeed * Time.deltaTime * 2);
+                AnimatorInformation(transform.position, MapGenerator.instance.activePlayer.transform.position);
             }
             else
             {
@@ -183,6 +201,7 @@ public class Enemy : MonoBehaviour
                     }
                 }
                 transform.position = Vector3.MoveTowards(transform.position, new Vector3(nextMove.x * 2.56f + 1.28f, nextMove.y * 2.56f + 1.28f, 0), moveSpeed * Time.deltaTime * 2);
+                AnimatorInformation(transform.position, new Vector3(nextMove.x * 2.56f + 1.28f, nextMove.y * 2.56f + 1.28f, 0));
             }
             
 

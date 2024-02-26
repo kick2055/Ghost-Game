@@ -7,22 +7,21 @@ using UnityEngine.SceneManagement;
 public class Observer : MonoBehaviour
 {
     public TMP_Text robotsText;
-    public TMP_Text dangedText;
-    public TMP_Text heartText;
 
     private void OnEnable()
     {
-        Player.soulsChanged += UpdateRobots;
+        Player.robotsChanged += UpdateRobots;
     }
     private void OnDisable()
     {
-        Player.soulsChanged -= UpdateRobots;
+        Player.robotsChanged -= UpdateRobots;
     }
-    private void UpdateRobots(int ammount)
+    public void UpdateRobots(int ammount)
     {
-        robotsText.text = ammount + "/9 robots";
+        robotsText.text = ammount + "/"+ MapGenerator.instance.numberOfRobots;
         if (ammount == MapGenerator.instance.numberOfRobots)
         {
+            GlobalData.time = Timer.instance.getTimer();
             SceneManager.LoadScene(3);
         }
     }
