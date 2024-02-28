@@ -49,7 +49,7 @@ public class MapGenerator : MonoBehaviour
             Destroy(this);
             return;
         }
-        numberOfRobots = 1;
+        numberOfRobots = 6;
     }
     public void CreateMap(int right, int up,int left, int down)
     {
