@@ -5,7 +5,6 @@ using UnityEngine.SceneManagement;
 
 public class Enemy : MonoBehaviour
 {
-    private Vector2 position;
     public float moveSpeed = 0.000001f;
     public Rigidbody2D rigidBody;
     public Vector3 direction;
@@ -27,7 +26,7 @@ public class Enemy : MonoBehaviour
     public RaycastHit2D hit;
     public bool canSeePlayer = false;
     public bool returningToPatrol = false;
-
+    public bool toDestroy; 
 
     public Point CheckWhatChank(float x, float y)
     {
@@ -84,6 +83,7 @@ public class Enemy : MonoBehaviour
     }
     void Start()
     {
+        toDestroy = false;
         startTime = Time.time;
         journeyLength = 5000f;
         /*direction.x = 0.005f;
@@ -101,6 +101,10 @@ public class Enemy : MonoBehaviour
             GlobalData.time = Timer.instance.getTimer();
             SceneManager.LoadScene(2);
         }
+        if(MapGenerator.instance.freezeCounter < MapGenerator.instance.freezeTime)
+        {
+            return;
+        }
         Vector2 rayDirection = MapGenerator.instance.activePlayer.transform.position - transform.position;
         rayDirection.y -= 0.8f;
         RaycastHit2D hit = Physics2D.Raycast(transform.position, rayDirection, 9999, layerMask);
@@ -112,7 +116,7 @@ public class Enemy : MonoBehaviour
         {
             if(hit.collider.gameObject.CompareTag("Player"))
             {
-                canSeePlayer = true;
+                if (MapGenerator.instance.activePlayer.camouflage == false) canSeePlayer = true;
             }
             else
             {
@@ -184,7 +188,7 @@ public class Enemy : MonoBehaviour
         else
         {
             
-            if (hitWater.collider.gameObject.CompareTag("Player") && hit.collider.gameObject.CompareTag("Player") && CalculateDistance(transform.position.x, transform.position.y, MapGenerator.instance.activePlayer.transform.position.x, MapGenerator.instance.activePlayer.transform.position.y) <= 100)
+            if (hitWater.collider.gameObject.CompareTag("Player") && hit.collider.gameObject.CompareTag("Player") && CalculateDistance(transform.position.x, transform.position.y, MapGenerator.instance.activePlayer.transform.position.x, MapGenerator.instance.activePlayer.transform.position.y) <= 64)
             {
                 transform.position = Vector3.MoveTowards(transform.position, MapGenerator.instance.activePlayer.transform.position, moveSpeed * Time.deltaTime * 2);
                 AnimatorInformation(transform.position, MapGenerator.instance.activePlayer.transform.position);

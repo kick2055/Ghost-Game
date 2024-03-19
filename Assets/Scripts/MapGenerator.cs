@@ -11,9 +11,12 @@ public class MapGenerator : MonoBehaviour
     private Vector2[] possibleRobots;
     [SerializeField]
     private Vector2[] possibleEnemies;
+    [SerializeField]
+    private Vector2[] possibleBoxes;
     public List<Robot> listOfRobots = new List<Robot>();
     public List<Enemy> listOfEnemies = new List<Enemy>();
-    public GameObject robotPrefab, chestPrefab, enemyPrefab;
+    public List<SuperPowerBox> listOfBoxes = new List<SuperPowerBox>();
+    public GameObject robotPrefab, chestPrefab, enemyPrefab, boxPrefab;
     public Player activePlayer;
     public Tilemap wallCollider1;
     public Tilemap wallCollider2;
@@ -27,9 +30,12 @@ public class MapGenerator : MonoBehaviour
     public bool EnemySeesPlayer;
     public int numberOfRobots = 9;
     public int numberOfEnemy = 5;
+    public int numberOfBoxes;
     private float timerPlayerLost = 0.0f;
     private float timerPathToPlayer = 10.0f;
     private float waitTimePlayerLost = 4.0f;
+    public float freezeTime = 5.0f;
+    public float freezeCounter = 6.0f;
     private float waitTimeToPlayer = 1f;
     public int[,] mapOfTakenPoints;
     [HideInInspector]
@@ -37,6 +43,12 @@ public class MapGenerator : MonoBehaviour
     public bool gameIsPaused = false;
     public static event System.Action<string> playerVisibilityChanged;
     public GameObject parentOfPause;
+    public SuperPowerManager superPowerManager;
+    public bool detectionActivated;
+    public Point hologramChank;
+    public bool hologramStateChanged;
+    public Color colorOfPlayer;
+    public Color colorOfEnemy;
 
     void Awake()
     {
@@ -50,6 +62,27 @@ public class MapGenerator : MonoBehaviour
             return;
         }
         numberOfRobots = 6;
+        numberOfBoxes = 2;
+        freezeCounter = 6f;
+        freezeTime = 5f;
+        detectionActivated = false;
+    }
+    public void CreateHologram(Vector3 chank)
+    {
+        hologramChank = new Point((int)chank.x, (int)chank.y);
+        if (Map[hologramChank.X + 27][-hologramChank.Y + 31] == 1)
+        {
+            hologramStateChanged = true;
+            Map[hologramChank.X + 27][-hologramChank.Y + 31] = 0;
+        } 
+        else { hologramStateChanged = false; }
+    }
+    public void DestroyHologram()
+    {
+        if(hologramStateChanged)
+        {
+            Map[hologramChank.X + 27][-hologramChank.Y + 31] = 1;
+        }
     }
     public void CreateMap(int right, int up,int left, int down)
     {
@@ -453,6 +486,7 @@ public class MapGenerator : MonoBehaviour
         string a = "";
         List<int> positionsOfRobots = RandomIds(23, numberOfRobots);
         List<int> positionsOfEnemies = RandomIds(9, numberOfEnemy);
+        List<int> positionsOfBoxes = RandomIds(5, numberOfBoxes);
         for (int i = 0; i < positionsOfRobots.Count; i++)
         {
             Robot robot = Instantiate(robotPrefab, new Vector3(possibleRobots[positionsOfRobots[i]].x, possibleRobots[positionsOfRobots[i]].y, 0), Quaternion.identity).GetComponent<Robot>();
@@ -462,6 +496,11 @@ public class MapGenerator : MonoBehaviour
         {
             Enemy enemy = Instantiate(enemyPrefab, new Vector3(possibleEnemies[positionsOfEnemies[i]].x, possibleEnemies[positionsOfEnemies[i]].y, 0), Quaternion.identity).GetComponent<Enemy>();
             listOfEnemies.Add(enemy);
+        }
+        for (int i = 0; i < positionsOfBoxes.Count; i++)
+        {
+            SuperPowerBox box = Instantiate(boxPrefab, new Vector3(possibleBoxes[positionsOfBoxes[i]].x, possibleBoxes[positionsOfBoxes[i]].y, 0), Quaternion.identity).GetComponent<SuperPowerBox>();
+            listOfBoxes.Add(box);
         }
         CreateMap(21, 32, -27, -3);
         ResetMapOfTakenPoints();
@@ -497,6 +536,8 @@ public class MapGenerator : MonoBehaviour
             path.Reverse();
             enemy.patrolPath = path;
         }
+        colorOfPlayer = activePlayer.GetComponent<Renderer>().material.color;
+        colorOfEnemy = listOfEnemies[0].GetComponent<Renderer>().material.color;
     }
     void Update()
     {
@@ -512,6 +553,18 @@ public class MapGenerator : MonoBehaviour
             }
         }
 
+        if(MapGenerator.instance.freezeCounter < MapGenerator.instance.freezeTime)
+        {
+            MapGenerator.instance.freezeCounter += Time.deltaTime;
+            if(MapGenerator.instance.freezeCounter >= MapGenerator.instance.freezeTime)
+            {
+                foreach (Enemy enemy in MapGenerator.instance.listOfEnemies)
+                {
+                    enemy.GetComponent<Renderer>().material.color = colorOfEnemy;
+                    enemy.GetComponent<Animator>().enabled = true;
+                }
+            }
+        }
         foreach(Enemy enemy in listOfEnemies)
         {
             if(enemy.canSeePlayer == true)
@@ -574,5 +627,13 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
+        foreach(Enemy enemy in listOfEnemies)
+        {
+            if(enemy.toDestroy)
+            {
+                Destroy(enemy);
+            }
+        }
+
     }
 }

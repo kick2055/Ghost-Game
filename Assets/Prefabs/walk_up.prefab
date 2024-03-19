@@ -101,7 +101,7 @@ GameObject:
   - component: {fileID: -4241455084969815592}
   m_Layer: 0
   m_Name: walk_up
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -221,6 +221,7 @@ MonoBehaviour:
   speed: 0
   patrolCounter: 0
   layerMask: 4
+  layerMaskWater: 0
   canSeePlayer: 0
   returningToPatrol: 0
 --- !u!61 &-8318017178084173461

@@ -52,7 +52,6 @@ public class Timer : MonoBehaviour
         float seconds = Mathf.FloorToInt(time % 60);
 
         string whatTime = string.Format("{00:00}:{1:00}", minutes, seconds);
-        Debug.Log(whatTime);
         timeUI.text = whatTime.ToString();
     }
 }

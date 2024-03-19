@@ -16,6 +16,7 @@ public class Player : MonoBehaviour
     public static event Action<int> robotsChanged;
     public static event Action<float> staminaChanged;
     public static event Action<bool> exhaustedChanged;
+    public static event Action<int[]> powerChanged;
     public Animator animator;
     public int stamina;
     public bool exhausted;
@@ -23,8 +24,12 @@ public class Player : MonoBehaviour
     public float timer;
     public float maxStamina;
     public float weightSlow;
-    
-    
+    public int[] superPowers = new int[2];
+    public List<int> usedPowers = new List<int>();
+    public bool camouflage = false;
+    public float camouflageCounter = 0.0f;
+    public float camouflageTime = 20.0f;
+
     void Start()
     {
         weightSlow = 1f;
@@ -35,7 +40,9 @@ public class Player : MonoBehaviour
         stamina = 200;
         exhaustTime = 5f;
         maxStamina = 200f;
-        
+        superPowers[0] = 0;
+        superPowers[1] = 0;
+        camouflage = false;
     }
 
     // Update is called once per frame
@@ -45,7 +52,21 @@ public class Player : MonoBehaviour
         {
             return;
         }
-        //input
+
+        if(camouflage)
+        {
+            camouflageCounter += Time.deltaTime;
+            if (camouflageCounter > camouflageTime) { camouflage = false; MapGenerator.instance.activePlayer.GetComponent<Renderer>().material.color = MapGenerator.instance.colorOfPlayer; }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            if (superPowers[0] != 0) { MapGenerator.instance.superPowerManager.UsePower(superPowers[0], 'z'); AudioManager.instance.PlaySound("SoundRobot"); }
+        }
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            if (superPowers[1] != 0) {MapGenerator.instance.superPowerManager.UsePower(superPowers[1],'x'); AudioManager.instance.PlaySound("SoundRobot"); }
+        }
         movement.x = Input.GetAxisRaw("Horizontal");
         movement.y = Input.GetAxisRaw("Vertical");
         movement.x = movement.x * 1.5f;
@@ -154,5 +175,34 @@ public class Player : MonoBehaviour
             b = y / 2.56f;
         }
         return new Vector3(a - (a % 1), b - (b % 1), 0);
+    }
+    public int RandomNotUsedNumber()
+    {
+        int exit = -1;
+        while (exit == -1)
+        {
+            exit = UnityEngine.Random.Range(1, 6);
+            if (usedPowers.Contains(exit)) exit = -1;
+        }
+        usedPowers.Add(exit);
+        return exit;
+    }
+
+    public void GetPower()
+    {
+        if(superPowers[0]==0)
+        {
+            int number = RandomNotUsedNumber();
+            superPowers[0] = number;
+            int[] inv = {0,number};
+            powerChanged?.Invoke(inv);
+        }
+        else
+        {
+            int number = RandomNotUsedNumber();
+            superPowers[1] = number;
+            int[] inv = { 1, number };
+            powerChanged?.Invoke(inv);
+        }
     }
 }
